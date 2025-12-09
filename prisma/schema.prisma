@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// Accounts represent sources/allocations of money
+model Account {
+  id           String        @id @default(cuid())
+  name         String
+  type         String        // "bank" | "cash" | "savings" | "credit" | "custom"
+  balance      Float         @default(0)
+  color        String        @default("#71717a")
+  icon         String        @default("wallet")
+  isDefault    Boolean       @default(false)
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+// Categories for organizing spending
+model Category {
+  id            String        @id @default(cuid())
+  name          String
+  color         String        @default("#71717a")
+  icon          String        @default("tag")
+  budget        Float?
+  subcategories Subcategory[]
+  transactions  Transaction[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+// Subcategories within categories
+model Subcategory {
+  id           String        @id @default(cuid())
+  name         String
+  categoryId   String
+  category     Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Transaction {
+  id            String       @id @default(cuid())
+  amount        Float
+  description   String
+  date          DateTime     @default(now())
+  type          String       @default("expense") // "income" | "expense"
+  accountId     String?
+  account       Account?     @relation(fields: [accountId], references: [id])
+  categoryId    String?
+  category      Category?    @relation(fields: [categoryId], references: [id])
+  subcategoryId String?
+  subcategory   Subcategory? @relation(fields: [subcategoryId], references: [id])
+  notes         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
